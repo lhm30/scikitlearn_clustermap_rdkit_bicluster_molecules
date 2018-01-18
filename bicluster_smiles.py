@@ -1,4 +1,3 @@
-#hacked seaborn code to display compound bi-clustering
 import sys
 import os
 import numpy as np
@@ -14,14 +13,17 @@ import matplotlib.cm as cm
 import seaborn as sns
 import pandas as pd
 from optparse import OptionParser
-sns.set(font_scale=1.8)
 
 parser = OptionParser()
 parser.add_option("-x", "--xcomp", dest="infile1", help="The x-axis compounds", metavar="FILE")
 parser.add_option("-y", "--ycomp", dest="infile2", help="The y-axis compounds", metavar="FILE")
 parser.add_option("-o", "--out", dest="outfile", help="The png outputfile", metavar="FILE")
 parser.add_option("-s", "--subi", default=100, type=int, dest="subImgSize", help="The compound subimage size")
+parser.add_option("-f", "--fsiz", default=1.0, type=float, dest="fontsize", help="The font size")
+parser.add_option("-a", action="store_true", default=False, dest="annot")
 (options, args) = parser.parse_args()
+
+sns.set(font_scale=options.fontsize)
 
 #calculate 2048bit morgan fingerprints, radius 2
 def calcFingerprints(m):
@@ -50,12 +52,12 @@ if os.path.splitext(options.outfile)[1][1:] != 'png':
     quit()
 
 #calculate similarity matrix
-sim_matrix = [DataStructs.BulkTanimotoSimilarity(fp,f2_fps) for fp in f1_fps]
+sim_matrix = [DataStructs.BulkTanimotoSimilarity(fp,f1_fps) for fp in f2_fps]
 
 #generate clustermap
 cmap = mcol.LinearSegmentedColormap.from_list("n",[sns.xkcd_rgb["denim blue"],sns.xkcd_rgb["pale red"]])
 norm = plt.Normalize(0,1)
-g = sns.clustermap(sim_matrix, annot=True, figsize=(10, 10), cmap=cmap, norm=norm, method='complete', cbar_kws={"label": "Tanimoto Coefficient\n(Tc) Similairty\n"})
+g = sns.clustermap(sim_matrix, annot=options.annot, figsize=(10, 10), cmap=cmap, norm=norm, method='complete', cbar_kws={"label": "Tanimoto Coefficient\n(Tc) Similairty\n"})
 
 #reorder inputs into x & y cluster orders
 y_order=[int(tick.get_text()) for tick in reversed(g.ax_heatmap.get_ymajorticklabels())]
